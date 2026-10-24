@@ -13,3 +13,5 @@ This app is intended for personal use. Before exposing a paid API publicly, add 
 Deployment check: initiated after configuring Cloudflare GitHub Actions secrets.
 
 Cloudflare deployment retry after configuring repository secrets.
+
+Deployment retry after Cloudflare token configuration (attempt 3).
