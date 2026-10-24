@@ -11,7 +11,46 @@ function render(){ $('messages').replaceChildren();for(const m of history){const
 function pass(){const v=$('password').value;if(!v)throw Error('Vul eerst je dashboardwachtwoord in');return v}
 async function request(endpoint,payload,form=false){const options={method:'POST',headers:{'X-Studio-Password':pass()},body:form?payload:JSON.stringify(payload)};if(!form)options.headers['Content-Type']='application/json';const r=await fetch('/api/'+endpoint,options);const d=await r.json();if(!r.ok)throw Error(d.error||'Verzoek mislukt');return d}
 $('send').onclick=async()=>{const q=$('question').value.trim();if(!q)return;const btn=$('send');btn.disabled=true;$('chatStatus').textContent='AI denkt na...';try{pass();history.push({role:'user',content:q});$('question').value='';render();const d=await request('chat',{messages:history.slice(-20)});history.push({role:'assistant',content:d.answer});localStorage.setItem('studioMessages',JSON.stringify(history));render();$('chatStatus').textContent=''}catch(e){$('chatStatus').textContent=e.message}finally{btn.disabled=false}};$('question').onkeydown=e=>{if(e.key==='Enter')$('send').click()};$('reset').onclick=()=>{history=[];localStorage.removeItem('studioMessages');render()};
-function add(b64){const binary=atob(b64);const parts=[];for(let i=0;i<binary.length;i+=16384){const slice=binary.slice(i,i+16384),bytes=new Uint8Array(slice.length);for(let j=0;j<slice.length;j++)bytes[j]=slice.charCodeAt(j);parts.push(bytes)}const blob=new Blob(parts,{type:'image/png'});const url=URL.createObjectURL(blob);const filename='ai-studio-'+Date.now()+'.png';for(const id of ['galleryItems','latest','adultLatest']){const box=document.createElement('div');box.className='item';const im=document.createElement('img');im.src=url;im.alt='Gegenereerde afbeelding';const a=document.createElement('a');a.href=url;a.download=filename;a.textContent='Download afbeelding';a.addEventListener('click',()=>{a.textContent='Download gestart';setTimeout(()=>{a.textContent='Download afbeelding'},2500)});box.append(im,a);$(id).prepend(box)}}
+const imageFiles=[];
+async function savePhoto(blob,filename,a){
+  a.textContent='Bezig met opslaan...';
+  try{
+    const file=new File([blob],filename,{type:blob.type||'image/png'});
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'AI Studio afbeelding'});
+      a.textContent='Opslaan of delen';
+      return;
+    }
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');link.href=url;link.download=filename;
+    document.body.append(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),120000);
+    a.textContent='Opnieuw downloaden';
+  }catch(err){
+    if(err.name==='AbortError'){a.textContent='Opslaan of delen';return}
+    a.textContent='Opslaan of delen';
+    alert('Opslaan is niet gelukt. Open de foto en houd de afbeelding ingedrukt om op te slaan.');
+  }
+}
+function add(b64){
+  const binary=atob(b64),parts=[];
+  for(let i=0;i<binary.length;i+=16384){
+    const slice=binary.slice(i,i+16384),bytes=new Uint8Array(slice.length);
+    for(let j=0;j<slice.length;j++)bytes[j]=slice.charCodeAt(j);
+    parts.push(bytes)
+  }
+  const blob=new Blob(parts,{type:'image/png'}),url=URL.createObjectURL(blob);
+  imageFiles.push({blob,url});
+  const filename='ai-studio-'+Date.now()+'.png';
+  for(const id of ['galleryItems','latest','adultLatest']){
+    const box=document.createElement('div');box.className='item';
+    const im=document.createElement('img');im.src=url;im.alt='Gegenereerde afbeelding';
+    const a=document.createElement('button');a.type='button';a.textContent='Opslaan of delen';
+    a.onclick=()=>savePhoto(blob,filename,a);
+    const open=document.createElement('a');open.href=url;open.target='_blank';open.rel='noopener';open.textContent='Foto openen';
+    box.append(im,a,open);$(id).prepend(box);
+  }
+}
 $('file').onchange=()=>{const f=$('file').files[0];const p=$('preview');if(p.dataset.url)URL.revokeObjectURL(p.dataset.url);p.style.display=f?'block':'none';if(f){p.dataset.url=URL.createObjectURL(f);p.src=p.dataset.url}};
 $('generate').onclick=async()=>{const btn=$('generate');btn.disabled=true;$('imageStatus').textContent='Foto genereren...';try{const d=await request('image',{prompt:$('prompt').value,size:$('size').value});add(d.image);$('imageStatus').textContent='Klaar'}catch(e){$('imageStatus').textContent=e.message}finally{btn.disabled=false}};
 $('edit').onclick=async()=>{const btn=$('edit');btn.disabled=true;$('imageStatus').textContent='Foto bewerken...';try{const f=$('file').files[0];if(!f)throw Error('Kies eerst een foto');if(f.size>8*1024*1024)throw Error('Foto te groot (max 8 MB)');const data=new FormData();data.append('image',f);data.append('prompt',$('editPrompt').value);data.append('size',$('size').value);const d=await request('edit',data,true);add(d.image);$('imageStatus').textContent='Bewerking klaar'}catch(e){$('imageStatus').textContent=e.message}finally{btn.disabled=false}};
