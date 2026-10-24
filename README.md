@@ -15,3 +15,6 @@ Deployment check: initiated after configuring Cloudflare GitHub Actions secrets.
 Cloudflare deployment retry after configuring repository secrets.
 
 Deployment retry after Cloudflare token configuration (attempt 3).
+
+## Venice 18+ Studio
+Set `VENICE_API_KEY` as a secret on the existing Cloudflare Worker. Optional `VENICE_IMAGE_MODEL` sets a Venice-supported image model; otherwise Venice's default image model is requested. This feature is limited to fictional consenting adult depictions and includes an 18+ self-confirmation, which is not a robust age-verification system. A production release requires suitable age verification, abuse prevention, per-user rate limiting, and legal/provider-terms review. The Venice image endpoint is separate from OpenAI image generation. Image generation costs can apply.
