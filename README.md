@@ -11,3 +11,5 @@ The image model defaults to **gpt-image-2**, and can be changed through the opti
 This app is intended for personal use. Before exposing a paid API publicly, add Cloudflare Access and robust server-side rate limits. Image gallery is session-local; chats are saved to your browser localStorage. The 18+ tab is a placeholder and does not generate explicit sexual content.
 
 Deployment check: initiated after configuring Cloudflare GitHub Actions secrets.
+
+Cloudflare deployment retry after configuring repository secrets.
