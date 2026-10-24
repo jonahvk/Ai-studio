@@ -9,3 +9,5 @@ In Cloudflare Worker settings add secret **OPENAI_API_KEY** and secret **APP_PAS
 The image model defaults to **gpt-image-2**, and can be changed through the optional server-side **IMAGE_MODEL** variable if the OpenAI project supports a different image generation/editing model.
 
 This app is intended for personal use. Before exposing a paid API publicly, add Cloudflare Access and robust server-side rate limits. Image gallery is session-local; chats are saved to your browser localStorage. The 18+ tab is a placeholder and does not generate explicit sexual content.
+
+Deployment check: initiated after configuring Cloudflare GitHub Actions secrets.
