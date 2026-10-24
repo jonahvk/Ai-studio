@@ -33,7 +33,14 @@ async function savePhoto(blob,filename,a){
   }
 }
 function add(b64){
-  const binary=atob(b64),parts=[];
+  if(typeof b64!=='string'||!b64.trim())throw Error('Geen geldige afbeeldingsgegevens ontvangen');
+  let payload=b64.trim();
+  if(payload.startsWith('data:')){const match=payload.match(/^data:image\/(png|jpeg|webp);base64,(.*)$/s);if(!match)throw Error('Onbekend afbeeldingsformaat');payload=match[2]}
+  payload=payload.replace(/\s/g,'').replace(/-/g,'+').replace(/_/g,'/');
+  if(!/^[A-Za-z0-9+/]*={0,2}$/.test(payload)||payload.length%4===1)throw Error('Afbeeldingsantwoord van AI is niet geldig (geen base64)');
+  payload=payload.replace(/=+$/,'');payload+='='.repeat((4-payload.length%4)%4);
+  let binary;try{binary=atob(payload)}catch{throw Error('Venice heeft ongeldige afbeeldingsdata teruggegeven')}
+  const parts=[];
   for(let i=0;i<binary.length;i+=16384){
     const slice=binary.slice(i,i+16384),bytes=new Uint8Array(slice.length);
     for(let j=0;j<slice.length;j++)bytes[j]=slice.charCodeAt(j);
